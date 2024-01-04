@@ -1,46 +1,37 @@
 const ZLEthPool = artifacts.require("ZLEthPool");
 
+const _1WEEK = 60 * 60 * 24 * 7
+
 contract("ZLEthPool Unit test", function (accounts) {
   const team = accounts[0];
   const userA = accounts[1];
   const userB = accounts[2];
 
-  advanceTime = (time) => {
-    return new Promise((resolve, reject) => {
-      web3.currentProvider.send({
+  advanceTime = (time) => new Promise((resolve, reject) => {
+    web3.currentProvider.send(
+      {
         jsonrpc: '2.0',
         method: 'evm_increaseTime',
         params: [time],
-      }, (err, result) => {
-        if (err) {
-          return reject(err)
-        }
-        return resolve(result)
-      })
-    })
-  }
+      },
+      (err, result) => err ? reject(err) : resolve(result)
+    )
+  })
 
-  advanceBlock = () => {
-    return new Promise((resolve, reject) => {
-      web3.currentProvider.send({
+  advanceBlock = () => new Promise((resolve, reject) => {
+    web3.currentProvider.send(
+      {
         jsonrpc: '2.0',
         method: 'evm_mine',
-      }, (err) => {
-        if (err) {
-          return reject(err)
-        }
-        const newBlockHash = web3.eth.getBlock('latest').hash
+      },
+      (err, result) => err ? reject(err) : resolve(result)
+    )
+  })
 
-        return resolve(newBlockHash)
-      })
-    })
-  }
-
-  advanceTimeAndBlock = async (time) => {
-    await advanceTime(time)
-    await advanceBlock()
-    return Promise.resolve(web3.eth.getBlock('latest'))
-  }
+  advanceTimeAndBlock = async (time) => await Promise.all([
+    advanceTime(time),
+    advanceBlock()
+  ]).then(() => web3.eth.getBlock('latest'))
 
   it("Case1", async function () {
     const contract = await ZLEthPool.deployed();
@@ -52,7 +43,7 @@ contract("ZLEthPool Unit test", function (accounts) {
     await advanceTimeAndBlock(45);
 
     await contract.deposit({from: team, value: web3.utils.toWei('2', 'ether')});
-    await advanceTimeAndBlock(60 * 60 * 24 * 7);
+    await advanceTimeAndBlock(_1WEEK);
 
     const [rewardA, rewardB] = await Promise.all([
       contract.calcReward(userA),
@@ -69,7 +60,7 @@ contract("ZLEthPool Unit test", function (accounts) {
       contract.withdraw({from: userB}),
     ]);
 
-    await contract.clearPool();
+    await contract.clearPool({from: team});
   });
 
 
@@ -83,8 +74,8 @@ contract("ZLEthPool Unit test", function (accounts) {
     await advanceTimeAndBlock(45);
 
     await contract.deposit({from: userB, value: web3.utils.toWei('3', 'ether')});
+    await advanceTimeAndBlock(_1WEEK);
 
-    await advanceTimeAndBlock(60 * 60 * 24 * 7);
     const [rewardA, rewardB] = await Promise.all([
       contract.calcReward(userA),
       contract.calcReward(userB),
