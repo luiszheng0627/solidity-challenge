@@ -46,7 +46,7 @@ contract ZLEthPool {
 
         userReward = 0;
         if (userDepositedAt[user] < rewardAddedAt) {
-            uint diff = block.timestamp - userDepositedAt[msg.sender];
+            uint diff = block.timestamp - userDepositedAt[user];
             if (diff > 12 seconds) {
                 if (diff > 1 weeks) diff = 1 weeks;
                 // TODO: We can apply more interesting reward calc model.
@@ -57,8 +57,7 @@ contract ZLEthPool {
 
     function withdraw() external {
         require(msg.sender != team, 'Invalid withdraw user');
-
-        uint userAmount = userDeposits[msg.sender] + calcReward(msg.sender);
+        uint userAmount = calcReward(msg.sender) + userDeposits[msg.sender];
 
         userDeposits[msg.sender] = 0;
         userDepositedAt[msg.sender] = 0;
