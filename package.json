@@ -6,9 +6,16 @@
   "scripts": {
     "compile": "truffle compile",
     "ganache": "truffle develop",
-    "test": "truffle test"
+    "test": "truffle test",
+    "deploy": "truffle migrate --compile-all --network goerli",
+    "verify": "truffle run verify ZLEthPool --network goerli --verifiers etherscan"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "dotenv": "^16.3.1",
+    "truffle-plugin-verify": "^0.6.7"
+  }
 }
